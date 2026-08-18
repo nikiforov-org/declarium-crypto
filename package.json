@@ -1,0 +1,64 @@
+{
+  "name": "@declarium/crypto",
+  "version": "0.1.0",
+  "description": "Вход по сертификату и подпись: КриптоПро ЭЦП Browser plug-in и Рутокен Плагин за одним интерфейсом",
+  "keywords": [
+    "криптопро",
+    "рутокен",
+    "кэп",
+    "гост",
+    "cades",
+    "cryptopro",
+    "rutoken",
+    "gost"
+  ],
+  "license": "MIT",
+  "author": "nikiforov-org",
+  "homepage": "https://github.com/nikiforov-org/declarium-crypto#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nikiforov-org/declarium-crypto.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nikiforov-org/declarium-crypto/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "declarium-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./internals": {
+      "declarium-source": "./src/internals.ts",
+      "types": "./dist/internals.d.ts",
+      "import": "./dist/internals.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "prepack": "pnpm build"
+  },
+  "dependencies": {
+    "@aktivco/rutoken-plugin": "^1.0.9",
+    "pkijs": "^3.4.0"
+  },
+  "devDependencies": {
+    "typescript": "~7.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
