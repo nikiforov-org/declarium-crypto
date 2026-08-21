@@ -1,0 +1,17 @@
+{
+  "name": "declarium-crypto-playground",
+  "private": true,
+  "type": "module",
+  "description": "Отладочный стенд для @declarium/crypto. В репозиторий не попадает.",
+  "scripts": {
+    "dev": "vite",
+    "cert": "node scripts/make-cert.mjs --force",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.0"
+  }
+}

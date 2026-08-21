@@ -1,15 +1,17 @@
 {
   "name": "@declarium/crypto",
   "version": "0.1.0",
-  "description": "Вход по сертификату и подпись: КриптоПро ЭЦП Browser plug-in и Рутокен Плагин за одним интерфейсом",
+  "description": "Вход по сертификату и подпись: КриптоПро ЭЦП Browser plug-in, Рутокен Плагин и Контур.Плагин за одним интерфейсом",
   "keywords": [
     "криптопро",
     "рутокен",
+    "контур",
     "кэп",
     "гост",
     "cades",
     "cryptopro",
     "rutoken",
+    "kontur",
     "gost"
   ],
   "license": "MIT",
@@ -37,12 +39,6 @@
     }
   },
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "src",
-    "README.md",
-    "LICENSE"
-  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",

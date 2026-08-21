@@ -7,11 +7,16 @@
  *   const signature = await session.sign(bytes)
  *
  * ── Порядок опроса ──────────────────────────────────────────────────────────
- * Сначала Рутокен, потом КриптоПро. Это приоритет, а не запасной путь: на
- * машине, где стоят оба, работать будут тоже оба — КриптоПро CSP видит ключи
- * Рутокена как свои контейнеры, а Рутокен Плагин те же ключи как объекты
- * PKCS#11, и список сертификатов совпадает. Значит порядок решает не «что
+ * Рутокен, КриптоПро, Контур. Это приоритет, а не запасной путь: на машине,
+ * где стоят несколько средств, работать будут тоже все — КриптоПро CSP видит
+ * ключи Рутокена как свои контейнеры, Рутокен Плагин те же ключи как объекты
+ * PKCS#11, а Контур.Плагин обращается к тому же CSP через своего посредника.
+ * Список сертификатов при этом совпадает, значит порядок решает не «что
  * доступно», а «через что подписывать».
+ *
+ * Контур последний именно поэтому: он не даёт доступа к чему-то новому, он
+ * лишний посредник перед тем же криптопровайдером. Но он единственный путь
+ * для того, кто ставил только установщик Контура, — а таких много.
  *
  * ── Выбор сертификата ───────────────────────────────────────────────────────
  * `chooseCertificate` зовётся всегда, даже когда сертификат один: человек
@@ -25,6 +30,7 @@
  */
 
 import { CryptoProProvider } from './cryptopro.js'
+import { KonturProvider } from './kontur.js'
 import { RutokenProvider } from './rutoken.js'
 import { parseCertificate, type X509Certificate } from './x509.js'
 import {
@@ -36,14 +42,15 @@ import {
   type VerifyResult,
 } from './types.js'
 
-export type ProviderId = 'rutoken' | 'cryptopro'
+export type ProviderId = 'rutoken' | 'cryptopro' | 'kontur'
 
-/** Порядок по умолчанию: приоритет у токена. */
-const DEFAULT_ORDER: readonly ProviderId[] = ['rutoken', 'cryptopro']
+/** Порядок по умолчанию: приоритет у токена, посредник — последним. */
+const DEFAULT_ORDER: readonly ProviderId[] = ['rutoken', 'cryptopro', 'kontur']
 
 const FACTORIES: Readonly<Record<ProviderId, () => CryptoProvider>> = {
   rutoken: () => new RutokenProvider(),
   cryptopro: () => new CryptoProProvider(),
+  kontur: () => new KonturProvider(),
 }
 
 export interface CertificateChoice {
@@ -60,7 +67,12 @@ export interface AuthenticateOptions {
   chooseCertificate(list: readonly CertificateChoice[]): Promise<string>
   /** Запрос ПИН. Нужен только для Рутокена и только при работе с ключом. */
   requestPin?(): Promise<string>
-  /** Порядок опроса бэкендов. По умолчанию Рутокен, затем КриптоПро. */
+  /**
+   * Порядок опроса средств. По умолчанию Рутокен, КриптоПро, Контур.
+   *
+   * Сузьте список, чтобы потребовать конкретное средство: `['kontur']`
+   * означает «только Контур, и если он не подошёл — не входить вовсе».
+   */
   order?: readonly ProviderId[]
 }
 
@@ -92,7 +104,8 @@ export class NoProviderError extends CryptoError {
   constructor(attempts: readonly ProviderAttempt[]) {
     super(
       'Не найдено средство электронной подписи',
-      'Нужен либо Рутокен Плагин с адаптером в браузере, либо КриптоПро ЭЦП Browser plug-in с расширением.',
+      'Подойдёт любое из трёх: Рутокен Плагин с адаптером, КриптоПро ЭЦП Browser plug-in с расширением ' +
+        'или Контур.Плагин с расширением. Каждому нужны обе части — и расширение, и приложение.',
     )
     this.name = 'NoProviderError'
     this.attempts = attempts
@@ -104,6 +117,9 @@ const EMPTY_STORE_HINT: Readonly<Record<ProviderId, string>> = {
   cryptopro:
     'Контейнеры могут быть видны, а хранилище «Личные» пусто: сертификаты не попадают туда сами. ' +
     'Установите их командой «csptestf -absorb -certs» либо «certmgr -inst -cont».',
+  // Контур работает только со своим каналом к токену и хранилищ операционной
+  // системы не читает — значит и пусто у него может быть только по-своему
+  kontur: 'Вставьте токен. Контур видит на нём сертификаты, записанные объектами PKCS#11.',
 }
 
 /**

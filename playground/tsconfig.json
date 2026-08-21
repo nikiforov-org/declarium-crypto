@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    // Скрипт выпуска сертификата написан на .mjs — типы выводятся из него
+    "allowJs": true,
+    "types": ["vite/client", "node"],
+    "paths": {
+      "@declarium/crypto": ["../src/index.ts"],
+      "@declarium/crypto/internals": ["../src/internals.ts"]
+    }
+  },
+  // Объявление модуля Актива живёт в библиотеке — без него ../src не проверяется
+  "include": ["src", "vite.config.ts", "../src/rutoken-plugin.d.ts"]
+}

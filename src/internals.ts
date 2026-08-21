@@ -12,6 +12,7 @@
  */
 
 export { CryptoProProvider } from './cryptopro.js'
+export { KonturProvider } from './kontur.js'
 export { RutokenProvider } from './rutoken.js'
 export { pemToBase64, type CertInfo, type CertStore, type CryptoProvider, type ProviderStatus } from './types.js'
 export { commonName, innFrom, parseRdn } from './rdn.js'
