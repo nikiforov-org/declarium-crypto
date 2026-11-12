@@ -28,6 +28,12 @@ import {
 
 /** Категория сертификата: пользовательский. */
 const CERT_CATEGORY_USER = 1
+/**
+ * Код отказа «вход уже выполнен» (ALREADY_LOGGED_IN в таблице errorCodes,
+ * plugin.api.rutoken.ru). Числом, как и категория сертификата: у объекта
+ * плагина, каким его отдаёт загрузчик, таблицы кодов нет.
+ */
+const ALREADY_LOGGED_IN = 93
 /** Сколько ждём ответа от плагина, прежде чем считать его мёртвым. */
 const PLUGIN_TIMEOUT_MS = 15_000
 /**
@@ -136,6 +142,11 @@ function describeRutokenError(error: unknown): string {
     if (parts.length) return parts.join(', ')
   }
   return String(error)
+}
+
+/** Отказ во входе оттого, что вход на токен уже выполнен. */
+function alreadyLoggedIn(error: unknown): boolean {
+  return Number((error as { message?: unknown } | null)?.message) === ALREADY_LOGGED_IN
 }
 
 export class RutokenProvider implements CryptoProvider {
@@ -330,10 +341,19 @@ export class RutokenProvider implements CryptoProvider {
     const failures: string[] = []
     for (const deviceId of devices) {
       try {
-        await plugin.login(deviceId, pin)
+        try {
+          await plugin.login(deviceId, pin)
+        } catch (e) {
+          // Вход на токен держит плагин, один на все сайты браузера: кто
+          // входил этим токеном в другой кабинет, у того он уже открыт, и
+          // повторный вход отклоняется при верном ПИН. Выход тут не помогает —
+          // вход после него отклоняется так же. Токен открыт, подписывать
+          // можно; введённый ПИН при этом не проверен — проверять его нечем.
+          if (!alreadyLoggedIn(e)) throw e
+        }
         this.unlocked.add(deviceId)
       } catch (e) {
-        failures.push(`${deviceId}: ${(e as Error).message ?? e}`)
+        failures.push(`${deviceId}: ${describeRutokenError(e)}`)
       }
     }
     if (!this.unlocked.size) {
